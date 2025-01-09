@@ -1,4 +1,4 @@
-#TODO，image similarity 
+#image similarity 
 import numpy as np
 print(np.__version__) 
 
@@ -168,9 +168,7 @@ for idx, img in enumerate(images):
     # 计算每个图像在拼接图像中的位置：
     # - x坐标：idx % 5 * 150 （每行5个图像，每个图像宽150像素）
     # - y坐标：idx // 5 * 150 （每列2个图像，每个图像高150像素）
-    # % 是取模运算符，计算除法的余数
-    # // 是整数除法运算符，计算除法的整数部分
-    # 这里用于计算图像在拼接画布上的位置：
+    
     # x = idx % 5 计算当前图像在行中的位置（0-4）
     # y = idx // 5 计算当前图像在列中的位置（0-1）
     # 使用PIL的paste方法将图像粘贴到指定位置

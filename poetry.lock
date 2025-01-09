@@ -3195,6 +3195,21 @@ tests = ["autopep8", "flake8", "isort", "llnl-hatchet", "numpy", "pytest", "scip
 tutorials = ["matplotlib", "pandas", "tabulate"]
 
 [[package]]
+name = "twelvelabs"
+version = "0.4.1"
+description = "SDK for Twelve Labs API"
+optional = false
+python-versions = "*"
+files = [
+    {file = "twelvelabs-0.4.1-py3-none-any.whl", hash = "sha256:9b7539c48529d8fbb61c94301b04fa578882a0de95239b0e311b2f32b533e37c"},
+    {file = "twelvelabs-0.4.1.tar.gz", hash = "sha256:0626ebd1f51c740c75cdf449730b4ec689be3285e68e90b456fb24f5356227ee"},
+]
+
+[package.dependencies]
+httpx = ">=0.25.2"
+pydantic = ">=2.4.2"
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -3430,4 +3445,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "cc8f5eabb3f4cde0ce06a0deab885f94c243da21b094174a5023d816bae7af76"
+content-hash = "e83e4d547f1da8cd6f2b655c67d3ee6c6dd6dfaa1934244ed10b66aacff94804"
