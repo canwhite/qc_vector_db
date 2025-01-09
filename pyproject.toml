@@ -15,8 +15,11 @@ requests = "^2.32.3"
 tqdm = "^4.67.1"
 langchain = "^0.3.14"
 langchain-openai = "^0.2.14"
-langchain-community = "^0.3.14"
 langchain-huggingface = "^0.1.2"
+timm = "^1.0.12"
+torch = "^2.5.1"
+scikit-learn = "^1.6.0"
+pillow = "^11.1.0"
 
 
 [build-system]
