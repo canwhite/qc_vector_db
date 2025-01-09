@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "qc-vector-db"
+version = "0.1.0"
+description = ""
+authors = ["qiaochao <qiaochao@icourt.cc>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dotenv = "^1.0.1"
+pinecone = "^5.4.2"
+pymilvus = "^2.5.3"
+openai = "^1.59.5"
+requests = "^2.32.3"
+tqdm = "^4.67.1"
+langchain = "^0.3.14"
+langchain-openai = "^0.2.14"
+langchain-community = "^0.3.14"
+langchain-huggingface = "^0.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
