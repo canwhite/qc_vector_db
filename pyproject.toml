@@ -22,6 +22,7 @@ scikit-learn = "^1.6.0"
 pillow = "^11.1.0"
 ipython = "^8.31.0"
 twelvelabs = "^0.4.1"
+datasets = "^3.2.0"
 
 
 [build-system]
