@@ -47,29 +47,139 @@ print(TWELVE_LABS_API_KEY)
 # create twelvelib client
 twelvelabs_client = TwelveLabs(api_key=TWELVE_LABS_API_KEY)
 
-# classic embedding 
+# --- get embedding results ---
 def generate_embedding(video_url):
-	"""
+    """
     Generate embeddings for a given video URL using the Twelve Labs API.
+    ... 文档注释保持不变 ...
+    """
+    # 创建embedding任务
+    task = twelvelabs_client.embed.task.create(
+        model_name="Marengo-retrieval-2.7",
+        video_url=video_url
+    )
 
-    This function creates an embedding task for the specified video URL using
-    the Marengo-retrieval-2.6 engine. It monitors the task progress and waits
-    for completion. Once done, it retrieves the task result and extracts the
-    embeddings along with their associated metadata.
+    print(f"Created task: id={task.id} engine_name={task.engine_name} status={task.status}")
+    
+    # 定义回调函数来监控任务进度
+    def on_task_update(task: EmbeddingsTask):
+        print(f"  Status={task.status}")
+
+    # 等待任务完成
+    status = task.wait_for_done(
+        sleep_interval=2,
+        callback=on_task_update
+    )
+    print(f"Embedding done: {status}")
+
+    # 获取任务结果
+    task_result = twelvelabs_client.embed.task.retrieve(task.id)
+
+    # 提取并返回embeddings
+    embeddings = []
+    for v in task_result.video_embeddings:
+        embeddings.append({
+            'embedding': v.embedding.float,
+            'start_offset_sec': v.start_offset_sec,
+            'end_offset_sec': v.end_offset_sec,
+            'embedding_scope': v.embedding_scope
+        })
+    
+    return embeddings, task_result
+
+
+
+video_url = "https://www.youtube.com/watch?v=rI-tjzfCsX8&ab_channel=RockZhang"
+# Assuming this function exists from previous step
+embeddings, task_result = generate_embedding(video_url)
+print(f"Generated {len(embeddings)} embeddings for the video")
+for i, emb in enumerate(embeddings):
+    print(f"Embedding {i+1}:")
+    print(f"  Scope: {emb['embedding_scope']}")
+    print(f"  Time range: {emb['start_offset_sec']} - {emb['end_offset_sec']} seconds")
+    print(f"  Embedding vector (first 5 values): {emb['embedding'][:5]}")
+    print()
+
+
+# --Inserting Embeddings into Milvus--
+def insert_embeddings(milvus_client, collection_name, task_result, video_url):
+    """
+    Insert embeddings into the Milvus collection.
 
     Args:
-        video_url (str): The URL of the video to generate embeddings for.
+        milvus_client: The Milvus client instance.
+        collection_name (str): The name of the Milvus collection to insert into.
+        task_result (EmbeddingsTaskResult): The task result containing video embeddings.
+        video_url (str): The URL of the video associated with the embeddings.
 
     Returns:
-        tuple: A tuple containing two elements:
-            1. list: A list of dictionaries, where each dictionary contains:
-                - 'embedding': The embedding vector as a list of floats.
-                - 'start_offset_sec': The start time of the segment in seconds.
-                - 'end_offset_sec': The end time of the segment in seconds.
-                - 'embedding_scope': The scope of the embedding (e.g., 'shot', 'scene').
-            2. EmbeddingsTaskResult: The complete task result object from Twelve Labs API.
+        MutationResult: The result of the insert operation.
 
-    Raises:
-        Any exceptions raised by the Twelve Labs API during task creation,
-        execution, or retrieval.
+    This function takes the video embeddings from the task result and inserts them
+    into the specified Milvus collection. Each embedding is stored with additional
+    metadata including its scope, start and end times, and the associated video URL.
     """
+    data = []
+
+    for i, v in enumerate(task_result.video_embeddings):
+        data.append({
+            "id": i,
+            "vector": v.embedding.float,
+            "embedding_scope": v.embedding_scope,
+            "start_offset_sec": v.start_offset_sec,
+            "end_offset_sec": v.end_offset_sec,
+            "video_url": video_url
+        })
+
+    insert_result = milvus_client.insert(collection_name=collection_name, data=data)
+    print(f"Inserted {len(data)} embeddings into Milvus")
+    return insert_result
+
+
+# Insert embeddings into the Milvus collection
+insert_result = insert_embeddings(milvus_client, collection_name, task_result, video_url)
+print(insert_result)
+
+
+# ---Similarity Search---
+def perform_similarity_search(milvus_client, collection_name, query_vector, limit=5):
+    """
+    Perform a similarity search on the Milvus collection.
+
+    Args:
+        milvus_client: The Milvus client instance.
+        collection_name (str): The name of the Milvus collection to search in.
+        query_vector (list): The query vector to search for similar embeddings.
+        limit (int, optional): The maximum number of results to return. Defaults to 5.
+
+    Returns:
+        list: A list of search results, where each result is a dictionary containing
+              the matched entity's metadata and similarity score.
+
+    This function searches the specified Milvus collection for embeddings similar to
+    the given query vector. It returns the top matching results, including metadata
+    such as the embedding scope, time range, and associated video URL for each match.
+    """
+    search_results = milvus_client.search(
+        collection_name=collection_name,
+        data=[query_vector],
+        limit=limit,
+        output_fields=["embedding_scope", "start_offset_sec", "end_offset_sec", "video_url"]
+    )
+
+    return search_results
+
+ 
+query_vector = task_result.video_embeddings[0].embedding.float
+
+# Perform a similarity search on the Milvus collection
+search_results = perform_similarity_search(milvus_client, collection_name, query_vector)
+
+print("Search Results:")
+for i, result in enumerate(search_results[0]):
+    print(f"Result {i+1}:")
+    print(f"  Video URL: {result['entity']['video_url']}")
+    print(f"  Time Range: {result['entity']['start_offset_sec']} - {result['entity']['end_offset_sec']} seconds")
+    print(f"  Similarity Score: {result['distance']}")
+    print()
+
