@@ -1,7 +1,7 @@
 import sys
 import os
 import pathlib import Path
-root_path = Path(__file__).parent.parent
+root_path = str(Path(__file__).parent.parent)
 sys.path.append(root_path)
 from llm import get_completion_from_prompt,get_completion_from_messages
 from HuggingFaceEmbeddings import HuggingFaceEmbeddings
@@ -123,6 +123,8 @@ relations = []
 passages = []
 
 #处理这些关系
+
+
 
 
 
