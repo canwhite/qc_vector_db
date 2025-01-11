@@ -170,9 +170,9 @@ for passage_id, dataset_info in enumerate(nano_dataset):
 # data insertx
 
 
-embedding = CustomTransformerEmbeddings()
+embedding_model = CustomTransformerEmbeddings()
 
-embedding_dim = len(embedding.embed_query("foo"))
+embedding_dim = len(embedding_model.embed_query("foo"))
 print(embedding_dim)
 
 
@@ -193,9 +193,61 @@ create_milvus_collection(relation_col_name)
 create_milvus_collection(passage_col_name)
 
 
+def milvus_insert(
+    collection_name: str,
+    text_list: list[str],
+):
+    batch_size = 512
+
+    # 这段代码实现了将文本数据批量插入到Milvus向量数据库的功能
+    # 主要流程如下：
+    # 1. 设置批量插入的大小为512，这是为了平衡内存使用和插入效率
+    # 2. 使用tqdm显示进度条，方便观察插入进度
+    # 3. 对文本列表进行分批次处理：
+    #    - 每次取出batch_size大小的文本
+    #    - 使用embedding_model将文本转换为向量
+    #    - 为每个批次生成唯一的ID
+    #    - 将ID、文本和向量打包成Milvus所需的格式
+    # 4. 调用milvus_client.insert将数据批量插入到指定集合中
+    # 
+    # 这种分批处理的方式有以下优点：
+    # - 避免一次性加载过多数据导致内存不足
+    # - 可以实时看到插入进度
+    # - 如果插入过程中出现错误，可以更容易定位问题批次
+    # - 支持断点续传，只需从失败批次重新开始
+    for row_id in tqdm(range(0, len(text_list), batch_size), desc="Inserting"):
+        batch_texts = text_list[row_id : row_id + batch_size]
+        batch_embeddings = embedding_model.embed_documents(batch_texts)
+
+        batch_ids = [row_id + j for j in range(len(batch_texts))]
+        batch_data = [
+            {
+                "id": id_,
+                "text": text,
+                "vector": vector,
+            }
+            for id_, text, vector in zip(batch_ids, batch_texts, batch_embeddings)
+        ]
+        milvus_client.insert(
+            collection_name=collection_name,
+            data=batch_data,
+        )
 
 
+milvus_insert(
+    collection_name=relation_col_name,
+    text_list=relations,
+)
 
+milvus_insert(
+    collection_name=entity_col_name,
+    text_list=entities,
+)
 
+milvus_insert(
+    collection_name=passage_col_name,
+    text_list=passages,
+)
 
+# query
 
