@@ -1,7 +1,7 @@
 # qc_vector_db
 vector db
 
-#pre:
+### pre:
 
 1.pip install poetry 
 2.poetry install
