@@ -3,7 +3,7 @@ vector db of milvus and expand hunggingface embedding dimensions
 
 ### pre:
 
-1.pip install poetry 
+1.pip install poetry     
 2.poetry install
 
 ### milvus 
