@@ -20,7 +20,7 @@ poetry run python custom.py
 
 ### milvus 
 > includes text/image/video similarity  
-> and a simple recommender
+> and a simple recommender  
 > introduce graph and fulfil one
 ```
 cd milv
