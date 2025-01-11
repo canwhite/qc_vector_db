@@ -48,14 +48,15 @@ class CustomHuggingFaceEmbeddings(HuggingFaceEmbeddings):
         return adjusted_emb.tolist()
 
 
-# 初始化自定义嵌入模型
-embeddings = CustomHuggingFaceEmbeddings(target_dim=2048)
+if  __name__ == "__main__":
+    # 初始化自定义嵌入模型
+    embeddings = CustomHuggingFaceEmbeddings(target_dim=2048)
 
-# 使用示例
-texts = ["这是第一个文本", "这是第二个文本"]
-doc_embeddings = embeddings.embed_documents(texts)
-query_embedding = embeddings.embed_query("这是查询文本")
+    # 使用示例
+    texts = ["这是第一个文本", "这是第二个文本"]
+    doc_embeddings = embeddings.embed_documents(texts)
+    query_embedding = embeddings.embed_query("这是查询文本")
 
-# 验证维度
-print(len(doc_embeddings[0]))  # 应该输出 1536
-print(len(query_embedding))     # 应该输出 1536
+    # 验证维度
+    print(len(doc_embeddings[0]))  # 应该输出 1536
+    print(len(query_embedding))     # 应该输出 1536

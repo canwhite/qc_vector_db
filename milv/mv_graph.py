@@ -1,13 +1,13 @@
 import sys
 import os
-import pathlib import Path
+from pathlib import Path
 root_path = str(Path(__file__).parent.parent)
 sys.path.append(root_path)
 from llm import get_completion_from_prompt,get_completion_from_messages
-from HuggingFaceEmbeddings import HuggingFaceEmbeddings
+# from langchain_huggingface import HuggingFaceEmbeddings
 
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict # 自动创建键
 # scipy 是一个用于科学计算和技术计算的 Python 库，主要功能包括：
 # 1. 数值计算：提供高效的数值积分、优化、插值等算法
 # 2. 线性代数：包含稀疏矩阵运算、特征值计算等
@@ -33,6 +33,12 @@ from tqdm import tqdm
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+
+from embd import CustomTransformerEmbeddings
+
+
+db_path = str(Path(__file__).parent.parent / "data/milvus_graph.db")
+milvus_client = MilvusClient(db_path)
 
 nano_dataset = [
     {
@@ -122,13 +128,77 @@ entities = []
 relations = []
 passages = []
 
-#处理这些关系
+print("-----1")
+#fulfil
+for passage_id, dataset_info in enumerate(nano_dataset):
+    passage, triplets = dataset_info["passage"], dataset_info["triplets"]
+    #先拿到了passage列表
+    passages.append(passage)
+    #分析三房关系
+    for triplet in triplets:
+        # 处理tri 0
+        if triplet[0] not in entities:
+            entities.append(triplet[0])
+        # 处理tri 2
+        if triplet[2] not in entities:
+            entities.append(triplet[2])
+        # 单个relation是tri的拼接
+        relation = " ".join(triplet)
+        
+        #处理relations数组
+        if relation not in relations:
+            relations.append(relation)
+            
+            # 解释为什么使用 len(relations) - 1：
+            # 1. relations 列表存储所有关系
+            # 2. 当添加一个新关系时，它会被追加到 relations 列表的末尾
+            # 3. len(relations) - 1 表示当前关系的索引（因为列表索引从0开始）
+            # 4. 这样可以将当前关系的索引添加到 entityid_2_relationids 中
+            # 5. 确保每个实体都能正确记录它参与的所有关系
+            # 例如：
+            # 假设 relations = ["关系1", "关系2"]
+            # 添加新关系 "关系3" 后，relations = ["关系1", "关系2", "关系3"]
+            # len(relations) - 1 = 2，即 "关系3" 的索引
+            entityid_2_relationids[entities.index(triplet[0])].append(
+                len(relations) - 1
+            )
+            entityid_2_relationids[entities.index(triplet[2])].append(
+                len(relations) - 1
+            )
+        relationid_2_passageids[relations.index(relation)].append(passage_id)
+
+print("-----2")
 
 
+# data insertx
 
 
+embedding = CustomHuggingFaceEmbeddings()
+
+print("2-1")
+
+embedding_dim = len(embedding.embed_query("foo"))
+print(embedding_dim)
 
 
+print("-----3")
+
+def create_milvus_collection(collection_name: str):
+    if milvus_client.has_collection(collection_name=collection_name):
+        milvus_client.drop_collection(collection_name=collection_name)
+    milvus_client.create_collection(
+        collection_name=collection_name,
+        dimension=embedding_dim,
+        consistency_level="Strong",
+    )
+
+
+entity_col_name = "entity_collection"
+relation_col_name = "relation_collection"
+passage_col_name = "passage_collection"
+create_milvus_collection(entity_col_name)
+create_milvus_collection(relation_col_name)
+create_milvus_collection(passage_col_name)
 
 
 
