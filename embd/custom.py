@@ -50,7 +50,6 @@ class CustomTransformerEmbeddings:
             # 获取模型的原始维度
             test_embedding = self.model.encode(["test"])[0]
             self.original_dim = len(test_embedding)
-            print(self.original_dim)
         
         if self.original_dim == self.target_dim:
             return embedding

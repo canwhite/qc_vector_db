@@ -128,7 +128,6 @@ entities = []
 relations = []
 passages = []
 
-print("-----1")
 #fulfil
 for passage_id, dataset_info in enumerate(nano_dataset):
     passage, triplets = dataset_info["passage"], dataset_info["triplets"]
@@ -167,21 +166,15 @@ for passage_id, dataset_info in enumerate(nano_dataset):
             )
         relationid_2_passageids[relations.index(relation)].append(passage_id)
 
-print("-----2")
-
 
 # data insertx
 
 
-embedding = CustomHuggingFaceEmbeddings()
-
-print("2-1")
+embedding = CustomTransformerEmbeddings()
 
 embedding_dim = len(embedding.embed_query("foo"))
 print(embedding_dim)
 
-
-print("-----3")
 
 def create_milvus_collection(collection_name: str):
     if milvus_client.has_collection(collection_name=collection_name):
@@ -191,7 +184,6 @@ def create_milvus_collection(collection_name: str):
         dimension=embedding_dim,
         consistency_level="Strong",
     )
-
 
 entity_col_name = "entity_collection"
 relation_col_name = "relation_collection"

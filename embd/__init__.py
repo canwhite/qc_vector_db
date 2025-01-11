@@ -1,1 +1,2 @@
-from .hg import CustomHuggingFaceEmbeddings,CustomTransformerEmbeddings
+from .hg import CustomHuggingFaceEmbeddings
+from .custom import CustomTransformerEmbeddings
