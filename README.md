@@ -1,5 +1,5 @@
 # qc_vector_db
-vector db
+vector db of milvus and expand hunggingface embedding dimensions
 
 ### pre:
 
