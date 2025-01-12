@@ -251,3 +251,35 @@ milvus_insert(
 
 # query
 
+query = "What contribution did the son of Euler's teacher make?"
+
+query_ner_list = ["Euler"]
+# query_ner_list = ner(query) # In practice, replace it with your custom NER approach
+
+query_ner_embeddings = [
+    embedding_model.embed_query(query_ner) for query_ner in query_ner_list
+]
+
+top_k = 3
+
+entity_search_res = milvus_client.search(
+    collection_name=entity_col_name,
+    data=query_ner_embeddings,
+    limit=top_k,
+    output_fields=["id"],
+)
+
+print("entity_res",entity_search_res)
+
+
+query_embedding = embedding_model.embed_query(query)
+
+
+# 我们要最满足需要的那个
+relation_search_res = milvus_client.search(
+    collection_name=relation_col_name,
+    data=[query_embedding],
+    limit=top_k,
+    output_fields=["id"],
+)[0]
+print("relation_res",relation_search_res)
